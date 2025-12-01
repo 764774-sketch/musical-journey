@@ -1250,8 +1250,8 @@ function endGame() {
     const finalMoney = gameData.money;
     const finalHappiness = gameData.happiness;
     
-    // スコア計算: (お金 / 100) + 幸福度
-    const finalScore = Math.round((finalMoney / 100) + finalHappiness);
+    // スコア計算: (お金 / 10) * 幸福度
+    const finalScore = Math.round((finalMoney / 10) * finalHappiness);
     
     document.getElementById('final-money').textContent = finalMoney.toLocaleString();
     document.getElementById('final-happiness').textContent = finalHappiness.toLocaleString();
@@ -1259,18 +1259,16 @@ function endGame() {
     
     let ratingText = '';
     
-    if (finalScore >= 1000) {
+    if (finalScore >= 200000) {
         ratingText = "✨ 伝説級の人生：最高の成功と幸福！";
-    } else if (finalScore >= 500) {
+    } else if (finalScore >= 100000) {
         ratingText = "🏆 勝ち組の人生：資産も幸福も手に入れた！";
-    } else if (finalScore >= 200) {
+    } else if (finalScore >= 40000) {
         ratingText = "✅ 満足の人生：平均以上に充実した日々！";
     } else if (finalScore >= 0) {
         ratingText = "⚖️ 平凡な人生：特に突出した点はないが、安定した人生。";
-    } else if (finalScore >= -500) {
-        ratingText = "⚠️ ギリギリの人生：負債と後悔が残る。";
     } else {
-        ratingText = "🚨 破滅的な人生：全てを失った…。";
+        ratingText = "🚨 破滅的な人生：負債と後悔が残る。";
     }
     
     document.getElementById('rating').textContent = ratingText;
@@ -1289,3 +1287,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
