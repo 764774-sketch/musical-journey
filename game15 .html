@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人生シミュレーションゲーム</title>
+    
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif; /* 日本語フォントを優先 */
+            /* 背景のグラデーションを調整 */
+            background: linear-gradient(135deg, #fce3e7 0%, #e0f2f7 100%); 
+            color: #333;
+            margin: 0;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #game-container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px; /* 角を丸く */
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15); /* より深い影 */
+            max-width: 850px; /* 少し広げる */
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.8); /* 軽いボーダー */
+        }
+        h1, h2 {
+            color: #d81b60; /* メインタイトルを鮮やかなピンクに */
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+        #status {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: none;
+            border-radius: 15px;
+            background: linear-gradient(45deg, #ffdde1 0%, #fcdada 100%); /* 暖色系のグラデーション */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        .status-item {
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+            display: flex; /* アイコンとテキストを横並びに */
+            align-items: center; /* 中央揃え */
+            gap: 8px; /* アイコンとテキストの間隔 */
+        }
+        .status-item span {
+            display: inline-block; /* アイコンと横並びにするため */
+            font-size: 1.6em;
+            color: #d93025; /* デフォルトは赤 */
+            margin-left: 5px;
+        }
+        .status-item i { /* Font Awesomeアイコンのスタイル */
+            font-size: 1.4em;
+            color: #d81b60; /* アイコンの色 */
+        }
+        #happiness-value { color: #f9ab00; } /* 幸福度はオレンジ */
+        #money-value.positive { color: #1e8e3e; } /* お金プラスは緑 */
+        #money-value.negative { color: #d93025; } /* お金マイナスは赤 */
+
+        #term-info {
+            background-color: #fcfcfc;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 6px solid #d81b60; /* メインカラーに合わせる */
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        #term-title {
+            font-size: 2em;
+            margin-bottom: 8px;
+            color: #d81b60;
+        }
+        #age-text {
+            font-size: 1.2em;
+            color: #777;
+            margin-bottom: 15px;
+        }
+        #term-description {
+            line-height: 1.8;
+            font-size: 1.1em;
+            color: #444;
+        }
+        #term-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            margin-top: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        #choices-container {
+            display: flex;
+            flex-direction: column;
+            gap: 18px; /* 間隔を広げる */
+            margin-top: 30px;
+        }
+        .choice-button {
+            background-color: #26c6da; /* 鮮やかなシアンブルー */
+            color: white;
+            border: none;
+            padding: 18px; /* パディングを増やす */
+            border-radius: 10px; /* 角を丸く */
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            text-align: left;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .choice-button:hover {
+            background-color: #00bcd4; /* ホバーで少し暗く */
+            transform: translateY(-2px); /* 少し浮き上がる */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        .choice-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .choice-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        #result-panel {
+            background-color: #e8f5e9; /* 結果パネルは薄い緑色 */
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid #a5d6a7;
+            margin-top: 30px;
+            display: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        #result-panel h3 {
+            color: #388e3c; /* 結果タイトルの色 */
+            margin-bottom: 15px;
+        }
+        #result-text {
+            line-height: 1.6;
+        }
+        .log-detail {
+            margin-top: 15px;
+            padding-left: 15px;
+            border-left: 4px solid #388e3c; /* 結果パネルに合わせる */
+            color: #333;
+            font-size: 1.05em;
+        }
+        #next-button {
+            background-color: #4CAF50; /* 緑 */
+            color: white;
+            border: none;
+            padding: 18px 35px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.3em;
+            margin-top: 30px;
+            width: 100%;
+            transition: background-color 0.3s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        #next-button:hover {
+            background-color: #388E3C; /* ホバーで少し暗く */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        #next-button:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 終了画面のスタイル */
+        #end-game-screen {
+            background-color: #fff3e0; /* 終了画面は薄いオレンジ */
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            display: none;
+            margin-top: 30px;
+        }
+        #end-game-screen h2 {
+            color: #ff9800; /* オレンジ色の見出し */
+            font-size: 2.5em;
+        }
+        .final-result-item {
+            font-size: 1.4em;
+            margin: 15px 0;
+            color: #444;
+        }
+        .final-result-item span {
+            font-weight: bold;
+            color: #d81b60;
+            font-size: 1.2em;
+        }
+        #rating {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 25px 0;
+            padding: 15px;
+            border: 3px dashed #ff9800;
+            display: inline-block;
+            color: #d81b60;
+        }
+        #total-score { /* スコア表示用の新しいスタイル */
+            font-size: 1.6em;
+            margin: 15px 0 25px;
+            color: #26c6da;
+            font-weight: bold;
+        }
+
+        /* 負債・家賃の報告パネルスタイル */
+        .repayment-warning {
+            color: #333; 
+            font-weight: normal;
+            font-size: 1.1em;
+            padding: 20px;
+            background-color: #ffe0b2; /* 薄いオレンジ */
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #ffb74d;
+        }
+        .repayment-warning h3 {
+            color: #e65100; /* 濃いオレンジ */
+            margin-top: 0;
+        }
+        .repayment-warning .final-status {
+            font-size: 1.2em;
+            margin-top: 10px;
+        }
+        
+        /* ランダムイベント報告パネル */
+        .random-event-report {
+            color: #333;
+            font-weight: normal;
+            font-size: 1.1em;
+            padding: 20px;
+            background-color: #fce4ec; /* 薄いピンク */
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #f48fb1;
+        }
+        .random-event-report h3 {
+            color: #d81b60; /* 濃いピンク */
+            margin-top: 0;
+        }
+
+        /* 新規追加: ペナルティ報告パネル */
+        .penalty-report {
+            color: #333;
+            font-weight: normal;
+            font-size: 1.1em;
+            padding: 20px;
+            background-color: #ffcdd2; /* 薄い赤 */
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #e57373;
+        }
+        .penalty-report h3 {
+            color: #c62828; /* 濃い赤 */
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <h1>人生シミュレーションゲーム</h1>
+
+    <div id="status">
+        <div class="status-item"><i class="fas fa-calendar-alt"></i> ターム: <span id="term-value">1</span></div>
+        <div class="status-item"><i class="fas fa-user-circle"></i> 年齢: <span id="age-value">22</span></div>
+        <div class="status-item"><i class="fas fa-yen-sign"></i> お金 (万円): <span id="money-value">1000</span></div>
+        <div class="status-item"><i class="fas fa-heart"></i> 幸福度: <span id="happiness-value">200</span></div>
+    </div>
+    
+    <div id="term-info">
+        <div class="penalty-report" id="status-penalty-report" style="display:none;">
+            </div>
+        <div class="repayment-warning" id="mandatory-payment-report" style="display:none;">
+            </div>
+        <div class="random-event-report" id="random-career-event" style="display:none;">
+            </div>
+        <div class="random-event-report" id="random-business-school-result" style="display:none;">
+            </div>
+
+
+        <div id="term-title"></div>
+        <div id="age-text"></div>
+        <div id="term-description"></div>
+        <img id="term-image" style="display:none;">
+    </div>
+    
+    <div id="choices-container">
+        </div>
+
+    <div id="result-panel">
+        <h3>結果発表</h3>
+        <div id="result-text"></div>
+    </div>
+    
+    <button id="next-button" style="display:none;">次へ進む</button>
+
+    <div id="log-section">
+        <h3>人生の記録</h3>
+        <ul id="log-list"></ul>
+    </div>
+    
+</div>
+
+<div id="end-game-screen">
+    <h2>人生終了</h2>
+    <div class="final-result-item">最終資産: <span id="final-money"></span> 万円</div>
+    <div class="final-result-item">最終幸福度: <span id="final-happiness"></span> pt</div>
+    <div id="total-score">総合スコア: <span id="final-score"></span></div>
+    <div id="rating"></div>
+</div>
+
+<script>
+// ----------------------------------------------------
+// 1. ゲームデータと定数
+// ----------------------------------------------------
+
+let gameData = {
+    term: 1,
+    age: 22,
+    money: 1000, // 初期資産 (万円)
+    happiness: 200, 
+    jobType: 'None',
+    isRetired: false,
+    hasInsurance: false, 
+    isRenting: false, 
+    log: [],
+    // 結婚状態を追跡
+    isMarried: false 
+};
+
+// 職種ごとの基本収入を定数化 (万円/4年)
+const JOB_INCOME = {
+    'Public': 150,
+    'Private': 200,
+    'Retired': 60, // 年金
+    'None': 0
+};
+
+// ターム情報 (全15ターム)
+const terms = [
+    // 1ターム: 就職 (22-25歳)
+    {
+        startAge: 22,
+        description: "大学を卒業し、いよいよ社会人です。どの道に進みますか？",
+        image: '新社会人.png', 
+        choices: {
+            A: {
+                text: "安定した公務員になる (初期収入高, 幸福度安定)",
+                logText: "安定した公務員になりました。確実な未来を手に入れました。",
+                money: 150, 
+                happiness: 15, 
+                type: 'job',
+                jobType: 'Public'
+            },
+            B: {
+                text: "成果主義の外資系企業に入る (初期収入低, 幸福度変動大)",
+                logText: "リスクを取って外資系企業に入社。実力次第の挑戦の日々が始まります。",
+                money: 50, 
+                happiness: 25, 
+                type: 'job',
+                jobType: 'Private'
+            }
+        }
+    },
+    // 2ターム: 仕事の選択 (26-29歳)
+    {
+        startAge: 26,
+        description: "仕事に慣れてきた頃、大きなプロジェクトが舞い込みました。挑戦と安定、どちらを選びますか？",
+        image: '新社会人.png', 
+        choices: {
+            A: {
+                text: "残業を厭わず、出世を目指す (収入↑, 幸福度↓↓)",
+                logText: "ひたすら働き、出世の階段を登り始めました。",
+                money: 150, 
+                happiness: -30, 
+            },
+            B: {
+                text: "定時で帰り、プライベートを充実させる (収入↓, 幸福度↑)",
+                logText: "仕事よりも自分の時間を大切にし、心身ともに健康な日々を過ごしています。",
+                money: 50, 
+                happiness: 40, 
+            }
+        }
+    },
+    // 3ターム: スキルアップ (30-33歳)
+    {
+        startAge: 30,
+        description: "30歳になり、将来への危機感を感じ始めました。自己投資を行いますか？",
+        image: '中年男女.png', 
+        choices: {
+            A: {
+                text: "高額なビジネススクールに通う (出費大, 低確率で収入大幅アップ)",
+                logText: "ビジネススクールに多額の投資を行いました。これが将来に活きるか…",
+                money: -150, 
+                happiness: 25, 
+                type: 'businessSchool' 
+            },
+            B: {
+                text: "趣味に没頭し、仕事のストレスを発散する (出費小, 幸福度アップ)",
+                logText: "週末は趣味に打ち込み、リフレッシュ。日々の幸福度が高まりました。",
+                money: -30, 
+                happiness: 35, 
+            }
+        }
+    },
+    // 4ターム: 新しい挑戦 (34-37歳)
+    {
+        startAge: 34,
+        description: "キャリアの岐路に立ちました。このまま今の仕事を続けるか、あるいはリスクを冒して転職するか？",
+        image: '中年社会人.png', 
+        choices: {
+            A: {
+                text: "高収入だが激務な異業種に転職する (お金↑↑, 幸福度↓↓)",
+                logText: "激務覚悟で異業種へ転職。給料は上がりましたが、生活は一変しました。",
+                money: 250, 
+                happiness: -60, 
+            },
+            B: {
+                text: "今の職場で安定を目指す (お金±0, 幸福度±0)",
+                logText: "現状維持を選択。安定した生活は続きますが、大きな変化はありません。",
+                money: 0,
+                happiness: 0,
+            }
+        }
+    },
+    // 5ターム: 保険の検討 (38-41歳)
+    {
+        startAge: 38,
+        description: "将来の備えとして、保険会社から高額な総合保険の案内が届きました。加入すれば安心ですが、まとまった出費になります。",
+        image: '中年社会人.png', 
+        choices: {
+            A: {
+                text: "年間100万円を払い込み、総合保険に加入する。",
+                logText: "将来の不安に備え、総合保険に加入しました。これで万が一のときも安心です。",
+                money: -100, 
+                happiness: 10, 
+                type: 'insurance' 
+            },
+            B: {
+                text: "保険は不要。その分、自由な資金として手元に置いておく。",
+                logText: "保険には加入せず、手元の資金を維持することにしました。備えよりも自由を優先します。",
+                money: 0,
+                happiness: 0
+            }
+        }
+    },
+    // 6ターム: 人生の伴侶 (42-45歳)
+    {
+        startAge: 42,
+        description: "将来を共にするパートナーについて考えます。結婚して家族を持つか、独身を貫くか？",
+        image: '中年男女.png', 
+        choices: {
+            A: {
+                text: "結婚し、共に生活を始める (出費↑, 幸福度↑↑)",
+                logText: "結婚し、人生の伴侶を得ました。大きな幸福感が得られました。",
+                money: -150, 
+                happiness: 100, 
+                type: 'marry'
+            },
+            B: {
+                text: "独身を貫く (お金±0, 幸福度±0)",
+                logText: "独身を貫くことを選択。自由な生活を楽しみます。",
+                money: 0,
+                happiness: 0,
+            }
+        }
+    },
+    // 7ターム: 住居の選択 (46-49歳)
+    {
+        startAge: 46,
+        description: "生活の基盤となる住居を選びます。持ち家か、それとも身軽な賃貸か？",
+        image: '中年男女.png', 
+        choices: {
+            A: {
+                text: "郊外に広い一軒家を購入する (出費大, 幸福度↑↑↑)",
+                logText: "郊外に夢の一軒家を購入。人生で最大の買い物が、心の満足感をもたらしました。",
+                money: -2000, 
+                happiness: 200, 
+                type: 'housing',
+                housingStatus: 'own' 
+            },
+            B: {
+                text: "賃貸に住み続け、自由に生きる (毎ターム家賃-70万円)",
+                logText: "賃貸を選び、身軽な生活を維持。毎ターム家賃の出費が発生します。",
+                money: 0,
+                happiness: 0,
+                type: 'housing',
+                housingStatus: 'rent' 
+            }
+        }
+    },
+    // 8ターム: 子供の教育 / 独身者の自己投資 (50-53歳)
+    {
+        startAge: 50,
+        description: "もし結婚していれば、子供の教育費のピークです。教育にどこまでお金をかけますか？",
+        image: '中年男女.png', 
+        choices: { // 既婚者（子持ち）向けを想定
+            A: {
+                text: "全てを惜しみなく教育に投資する (出費大, 低確率で収入大幅アップ)",
+                logText: "子供の将来のため、私立学校や塾に多額の費用を投じました。",
+                money: -1000, 
+                happiness: 40, 
+                type: 'educationInvest' 
+            },
+            B: {
+                text: "無理のない範囲で公立を選ぶ (お金±0, 幸福度±0)",
+                logText: "公立を選び、堅実な教育方針を貫きました。",
+                money: 0,
+                happiness: 0,
+            }
+        },
+        singleChoices: { // 独身者向け
+            A: {
+                text: "ボランティア団体に熱心に参加する (出費↓, 幸福度↑↑)",
+                logText: "ボランティア活動に没頭し、社会との繋がりと大きな幸福感を得ました。",
+                money: -100,
+                happiness: 80,
+            },
+            B: {
+                text: "高額なペットを飼い、時間を費やす (出費↑↑, 幸福度↑)",
+                logText: "高額なペットを飼い始めました。癒しを得られましたが、その後の世話と費用もかかります。",
+                money: -200,
+                happiness: 75, 
+            }
+        }
+    },
+    // 9ターム: 健康診断 (54-57歳)
+    {
+        startAge: 54,
+        description: "年に一度の健康診断で、医者から生活習慣の改善を勧められました。どうしますか？",
+        image: '中年男女.png', 
+        choices: {
+            A: {
+                text: "すぐに生活習慣を改善し、運動を始める (お金↓, 幸福度↑)",
+                logText: "健康的な食生活と運動を開始！体が軽くなり、幸福度も上がりました。",
+                money: -50, 
+                happiness: 45, 
+            },
+            B: {
+                text: "特に気にせず、今まで通り過ごす (お金±0, 幸福度↓)",
+                logText: "医者の忠告を無視。特に変化はありませんが、将来の不安が少し残ります。",
+                money: 0,
+                happiness: -10, 
+            }
+        }
+    },
+    // 10ターム: 早期退職の誘い (58-61歳)
+    {
+        startAge: 58,
+        description: "会社から早期退職の優遇プランが提示されました。リタイアするか、働き続けますか？",
+        image: '中年男女.png', 
+        choices: {
+            A: {
+                text: "早期退職し、第二の人生を謳歌する (収入↓, 幸福度↑↑) - 退職金ボーナス300万円。",
+                logText: "早期退職を決断。自由な時間を手に入れ、人生の幸福度が大幅にアップしました。",
+                money: 300, 
+                happiness: 80, 
+                type: 'retire'
+            },
+            B: {
+                text: "定年まで働き、収入源を確保する (収入↑, 幸福度±0)",
+                logText: "定年まで働き続けることを選択。安定した収入源を維持します。",
+                money: 0,
+                happiness: 0,
+            }
+        }
+    },
+    // 11ターム: 不慮の事故 (62-65歳)
+    {
+        startAge: 62,
+        description: "不慮の事故に巻き込まれました。怪我の治療と、相手への補償が必要です。",
+        image: '老後.png', 
+        choices: {
+            A: {
+                text: "事故の損害を全て受け入れる。", 
+                logText: "事故の損害を受け入れます...",
+                money: -1500, 
+                happiness: -60, 
+                type: 'accident'
+            },
+            B: {
+                text: "保険会社に全て任せる (保険加入者のみ選択可)。",
+                logText: "保険の適用により、金銭的損害を最小限に抑えられました。",
+                money: -150, // 手数料
+                happiness: -15, 
+                required: 'hasInsurance' 
+            },
+            C: {
+                text: "高額な弁護士費用を払い、相手との交渉を専門家に任せる (非保険者用)。",
+                logText: "専門家に交渉を依頼。金銭的損害は大きかったものの、精神的負担は減りました。",
+                money: -500, 
+                happiness: -30, 
+                required: '!hasInsurance' 
+            }
+        }
+    },
+    // 12ターム: 投資 (66-69歳)
+    {
+        startAge: 66,
+        description: "手元の資金が潤沢になりました。リスクを覚悟で大きな投資を行いますか？",
+        image: '老後.png', 
+        choices: {
+            A: {
+                text: "全財産の半分をリスク投資に回す (お金大幅変動)",
+                logText: "老後の資金を大胆に投資に回しました。運命の結果は…",
+                money: 0, 
+                happiness: 25, 
+                type: 'invest'
+            },
+            B: {
+                text: "安全な預金として手元に置いておく (お金±0, 幸福度±0)",
+                logText: "堅実に貯金を維持します。資金は減りませんが、増えもしません。",
+                money: 0,
+                happiness: 0,
+            }
+        }
+    },
+    // 13ターム: 家族との時間 (70-73歳)
+    {
+        startAge: 70,
+        description: "自由に使える時間が増えました。家族や友人と過ごしますか、それとも趣味に没頭しますか？",
+        image: '老後.png', 
+        choices: {
+            A: {
+                text: "家族・友人と旅行に出かける (出費↑, 幸福度↑)",
+                logText: "思い出作りのため、豪華な旅行に出かけました。",
+                money: -300, 
+                happiness: 75, 
+            },
+            B: {
+                text: "新しい趣味を見つけ、一人で没頭する (お金↓, 幸福度↑)",
+                logText: "長年の夢だった趣味に没頭。充実した日々を過ごしています。",
+                money: -60, 
+                happiness: 50, 
+            }
+        }
+    },
+    // 14ターム: 最後の選択 (74-77歳)
+    {
+        startAge: 74,
+        description: "人生の終盤です。あなたは満足していますか？",
+        image: '老後.png', 
+        choices: {
+            A: {
+                text: "「最高の人生だった」と振り返る (幸福度↑↑)",
+                logText: "後悔はありません。最高の人生でした。",
+                money: 0,
+                happiness: 120, 
+            },
+            B: {
+                text: "「もっとこうすれば良かった」と後悔する (幸福度↓↓)",
+                logText: "あれこれと後悔が残ります。",
+                money: 0,
+                happiness: -100, 
+            }
+        }
+    },
+    // 15ターム: 終焉 (78-81歳)
+    {
+        startAge: 78,
+        description: "静かに、人生の最期を迎えようとしています。",
+        image: '老後.png', 
+        choices: {
+            A: {
+                text: "安らかに人生を終える。",
+                logText: "あなたの人生はここで幕を閉じました。",
+                money: 0,
+                happiness: 0,
+            },
+            B: {
+                text: "まだやり残したことがある。",
+                logText: "もっと生きたかった。心残りがあります。",
+                money: 0,
+                happiness: -10, 
+            }
+        }
+    },
+];
+
+// ----------------------------------------------------
+// 2. UI操作関数
+// ----------------------------------------------------
+
+// ステータス表示の更新
+function updateStatus() {
+    document.getElementById('term-value').textContent = gameData.term;
+    document.getElementById('age-value').textContent = gameData.age;
+    
+    // お金はカンマ区切りにし、色を動的に変更
+    const moneyElement = document.getElementById('money-value');
+    moneyElement.textContent = gameData.money.toLocaleString();
+    moneyElement.classList.remove('positive', 'negative');
+    if (gameData.money >= 0) {
+        moneyElement.classList.add('positive');
+    } else {
+        moneyElement.classList.add('negative');
+    }
+
+    document.getElementById('happiness-value').textContent = gameData.happiness;
+}
+
+// ----------------------------------------------------
+// 3. ステータス相互作用によるペナルティ適用
+// ----------------------------------------------------
+function applyStatusPenalties() {
+    let penaltyMoney = 0;
+    let penaltyHappiness = 0;
+    let penaltyReportHTML = '';
+    
+    const moneyBeforePenalty = gameData.money;
+    const happinessBeforePenalty = gameData.happiness;
+
+    // 1. お金がマイナスのときの幸福度ペナルティ
+    if (moneyBeforePenalty < 0) {
+        // 1000万円ごとに幸福度が大きく下がる
+        const tier = Math.floor(Math.abs(moneyBeforePenalty) / 1000) + 1;
+        const deduction = tier * 30; // -30pt, -60pt, -90pt...
+        
+        penaltyHappiness -= deduction;
+        penaltyReportHTML += `
+            <p style="color:#c62828;">
+                **🚨 経済的ストレス:** 負債を抱えているため、精神的負担が増大しました。幸福度 **${deduction} pt** 減。
+            </p>
+        `;
+    }
+
+    // 2. 幸福度が低いときの収入ペナルティ
+    if (!gameData.isRetired && gameData.happiness < 100 && gameData.jobType !== 'None') {
+        const incomeLossRate = 0.2; // 収入の20%カット
+        const currentIncome = JOB_INCOME[gameData.jobType] || 0;
+        const lossAmount = Math.floor(currentIncome * incomeLossRate);
+        
+        penaltyMoney -= lossAmount;
+        penaltyReportHTML += `
+            <p style="color:#c62828;">
+                **📉 パフォーマンス低下:** 幸福度が低いため、仕事の成果が振るわず、今タームの収入から **${lossAmount.toLocaleString()} 万円** が差し引かれます。
+            </p>
+        `;
+    }
+    
+    // ペナルティの適用と報告
+    if (penaltyMoney !== 0 || penaltyHappiness !== 0) {
+        gameData.money += penaltyMoney;
+        gameData.happiness += penaltyHappiness;
+        
+        const totalPenaltyLog = {
+            term: gameData.term,
+            age: gameData.age,
+            choice: 'PENALTY',
+            logText: `ステータス相互作用によるペナルティ発生。`,
+            money: penaltyMoney,
+            happiness: penaltyHappiness
+        };
+        gameData.log.push(totalPenaltyLog);
+        
+        // 報告パネルに表示
+        const penaltyPanel = document.getElementById('status-penalty-report');
+        penaltyPanel.innerHTML = `
+            <h3>⚠️ ステータス連鎖ペナルティ発生！</h3>
+            ${penaltyReportHTML}
+        `;
+        penaltyPanel.style.display = 'block';
+    } else {
+        document.getElementById('status-penalty-report').style.display = 'none';
+    }
+}
+
+
+// ----------------------------------------------------
+// 4. ターム情報と選択肢の読み込み (loadTerm)
+// ----------------------------------------------------
+function loadTerm() {
+    // タームの限界チェック
+    if (gameData.term > terms.length) {
+        endGame();
+        return; 
+    }
+
+    const currentTerm = terms[gameData.term - 1];
+    gameData.age = currentTerm.startAge;
+
+    // UI要素の取得とリセット
+    const termTitle = document.getElementById('term-title');
+    const ageText = document.getElementById('age-text');
+    const termDescription = document.getElementById('term-description');
+    const choicesContainer = document.getElementById('choices-container');
+    const resultPanel = document.getElementById('result-panel');
+    const nextButton = document.getElementById('next-button');
+    const paymentReportPanel = document.getElementById('mandatory-payment-report');
+    const careerEventPanel = document.getElementById('random-career-event'); 
+    const randomEventPanel = document.getElementById('random-business-school-result'); 
+    const termImage = document.getElementById('term-image');
+
+    // UI初期化
+    resultPanel.style.display = 'none';
+    choicesContainer.innerHTML = '';
+    choicesContainer.style.display = 'flex';
+    nextButton.style.display = 'none';
+    paymentReportPanel.style.display = 'none'; 
+    paymentReportPanel.innerHTML = ''; 
+    careerEventPanel.style.display = 'none'; 
+    careerEventPanel.innerHTML = ''; 
+    randomEventPanel.style.display = 'none'; 
+    randomEventPanel.innerHTML = ''; 
+
+    // ----------------------------------------------------
+    // 3. ペナルティ処理をターム開始時に実行
+    // ----------------------------------------------------
+    applyStatusPenalties();
+
+
+    // ----------------------------------------------------
+    // 収入を加算 (負債の有無に関わらず実行)
+    // ----------------------------------------------------
+    let income = 0;
+    if (gameData.isRetired) {
+        income = JOB_INCOME['Retired']; 
+    } else {
+        income = JOB_INCOME[gameData.jobType] || 0;
+    }
+    
+    // 収入をログに記録
+    const incomeLog = {
+        term: gameData.term,
+        age: gameData.age,
+        choice: 'INCOME',
+        logText: `収入（${gameData.isRetired ? '年金' : '給与'}）を得ました。`,
+        money: income,
+        happiness: 0
+    };
+    const debtBeforeIncome = gameData.money;
+    gameData.money += income;
+    gameData.log.push(incomeLog);
+    updateStatus();
+
+    // ----------------------------------------------------
+    // 負債処理と報告
+    // ----------------------------------------------------
+    let debtReportHTML = '';
+    const debtAfterIncome = gameData.money;
+    
+    if (debtBeforeIncome < 0) {
+        let interestDeduction = 0;
+        let happinessChange = 0;
+        
+        if (gameData.money >= 0) {
+            debtReportHTML = `
+                <h3>✅ 負債完済の報告 (T${gameData.term})</h3>
+                <p>
+                    前タームの収入により、残っていた負債 **${Math.abs(debtBeforeIncome).toLocaleString()} 万円** を完済しました！
+                </p>
+                <p class="final-status" style="color:#1e8e3e; font-weight:bold;">
+                    現在の残高: ${gameData.money.toLocaleString()} 万円
+                </p>
+            `;
+            happinessChange = 30; 
+            
+        } else {
+            interestDeduction = Math.floor(debtAfterIncome * 0.1); 
+            gameData.money += interestDeduction; 
+            gameData.money = Math.round(gameData.money); 
+
+            debtReportHTML = `
+                <h3>🚨 負債状況の報告 (T${gameData.term})</h3>
+                <p>
+                    収入により負債の返済が行われましたが、**利息 ${Math.abs(interestDeduction).toLocaleString()} 万円** が自動的に差し引かれました。
+                </p>
+                <p class="final-status" style="color:#d93025; font-weight:bold;">
+                    現在の負債残高: ${Math.abs(gameData.money).toLocaleString()} 万円
+                </p>
+            `;
+            happinessChange = -15; 
+            
+            const interestLog = {
+                term: gameData.term,
+                age: gameData.age,
+                choice: 'INTEREST',
+                logText: `負債残高に対する利息を支払いました。`,
+                money: interestDeduction,
+                happiness: happinessChange 
+            };
+            gameData.log.push(interestLog);
+        }
+        
+        gameData.happiness += happinessChange;
+    }
+
+    // ----------------------------------------------------
+    // 賃貸家賃の支払いと報告
+    // ----------------------------------------------------
+    let rentReportHTML = '';
+    if (gameData.isRenting) {
+        const rentAmount = -70;
+        const happinessChange = -10;
+
+        gameData.money += rentAmount;
+        gameData.happiness += happinessChange;
+        
+        const rentLog = {
+            term: gameData.term,
+            age: gameData.age,
+            choice: 'RENT',
+            logText: `家賃（${Math.abs(rentAmount).toLocaleString()}万円）を支払いました。`,
+            money: rentAmount,
+            happiness: happinessChange 
+        };
+        gameData.log.push(rentLog);
+
+        rentReportHTML = `
+            <h3>🏠 家賃支払い報告 (T${gameData.term})</h3>
+            <p>
+                今タームの家賃 **${Math.abs(rentAmount).toLocaleString()} 万円** を支払いました。
+            </p>
+            <p class="final-status" style="color:#d81b60; font-weight:bold;">
+                幸福度 ${Math.abs(happinessChange)} pt 減。
+            </p>
+        `;
+    }
+
+    // ----------------------------------------------------
+    // 負債/家賃報告パネルの表示
+    // ----------------------------------------------------
+    if (debtReportHTML || rentReportHTML) {
+        paymentReportPanel.innerHTML = debtReportHTML + rentReportHTML;
+        paymentReportPanel.style.display = 'block';
+    }
+
+
+    // ----------------------------------------------------
+    // ターム情報の更新
+    // ----------------------------------------------------
+    termTitle.textContent = `第${gameData.term}ターム: ${currentTerm.startAge}〜${currentTerm.startAge + 3}歳`;
+    ageText.textContent = `現在の年齢: ${gameData.age}歳`;
+    termDescription.textContent = currentTerm.description;
+    
+    if (currentTerm.image) {
+        termImage.src = currentTerm.image;
+        termImage.style.display = 'block';
+    } else {
+        termImage.style.display = 'none';
+    }
+
+    updateStatus();
+
+
+    // ----------------------------------------------------
+    // 選択肢の生成
+    // ----------------------------------------------------
+    
+    let choices = currentTerm.choices;
+    
+    // ターム8: 結婚状態によって選択肢を切り替える
+    if (gameData.term === 8) {
+        if (!gameData.isMarried && currentTerm.singleChoices) {
+            choices = currentTerm.singleChoices;
+            termDescription.textContent = "あなたは独身です。自由に使えるお金を自己投資や趣味に充てますか？";
+        } else if (!gameData.isMarried) {
+             // 独身者向けの選択肢がない場合、Bを選択肢Aとして利用
+             const singleChoiceB = currentTerm.choices.B;
+             choices = {
+                A: {
+                    text: singleChoiceB.text + " (独身者向け)",
+                    logText: "（独身）" + singleChoiceB.logText,
+                    money: singleChoiceB.money,
+                    happiness: singleChoiceB.happiness,
+                },
+                B: {
+                    text: "さらにキャリアアップのため、高額セミナーに参加する (出費大, 収入変動)",
+                    logText: "（独身）キャリアアップのための高額セミナーに参加しました。",
+                    money: -300,
+                    happiness: 50,
+                    type: 'careerSeminar'
+                }
+             };
+             termDescription.textContent = "あなたは独身です。自由に使えるお金と時間をどのように使いますか？";
+        }
+    }
+    
+    // ターム11: 保険加入の有無で選択肢を調整
+    if (gameData.term === 11) {
+        if (!gameData.hasInsurance) {
+            // 保険に入っていない場合、Bを非表示にし、CをBとして扱う
+            choices = {
+                A: currentTerm.choices.A,
+                B: currentTerm.choices.C,
+            };
+        } else {
+             // 保険に入っている場合、Cを非表示
+            choices = {
+                A: currentTerm.choices.A,
+                B: currentTerm.choices.B,
+            };
+        }
+    }
+
+
+    Object.keys(choices).forEach(key => {
+        const choice = choices[key];
+        const button = document.createElement('button');
+        button.className = 'choice-button';
+        button.textContent = `${key}: ${choice.text}`;
+        button.onclick = () => handleChoice(key, choice);
+        choicesContainer.appendChild(button);
+    });
+}
+
+// ----------------------------------------------------
+// 5. 選択肢の処理 (handleChoice)
+// ----------------------------------------------------
+
+function handleChoice(key, choice) {
+    // ボタンを無効化
+    document.querySelectorAll('.choice-button').forEach(btn => btn.disabled = true);
+
+    let resultText = `**${choice.text}** を選択しました。<br><br>`;
+    let moneyChange = choice.money;
+    let happinessChange = choice.happiness;
+    let logDetail = '';
+    
+    // ----------------------------------------------------
+    // 特殊な選択肢の処理
+    // ----------------------------------------------------
+    if (choice.type === 'job') {
+        gameData.jobType = choice.jobType;
+        logDetail = `あなたの職種は **${choice.jobType === 'Public' ? '公務員' : '外資系企業'}** に決定しました。`;
+
+    } else if (choice.type === 'businessSchool') {
+        // ビジネススクールの結果をランダムに決定
+        if (Math.random() < 0.3) { // 30%の確率で大成功
+            moneyChange += 500; 
+            happinessChange += 80;
+            logDetail = `投資が大成功！スキルが市場で高く評価され、収入が大幅にアップしました。お金 **+500万円**、幸福度 **+80**。`;
+        } else {
+            moneyChange += 100; // 費用の一部は回収
+            happinessChange -= 40;
+            logDetail = `投資は失敗。学費の一部は回収できましたが、期待ほどの成果は得られませんでした。お金 **+100万円**、幸福度 **-40**。`;
+        }
+        document.getElementById('random-business-school-result').innerHTML = `
+            <h3>📚 自己投資の結果</h3>
+            <p>${logDetail}</p>
+        `;
+        document.getElementById('random-business-school-result').style.display = 'block';
+
+    } else if (choice.type === 'insurance') {
+        gameData.hasInsurance = true;
+        logDetail = '総合保険に加入しました。将来の万が一に備えられます。';
+    
+    } else if (choice.type === 'marry') {
+        gameData.isMarried = true;
+        logDetail = '結婚しました。家族という大きな幸福の源を得ました。';
+
+    } else if (choice.type === 'housing') {
+        if (choice.housingStatus === 'rent') {
+            gameData.isRenting = true;
+            logDetail = '賃貸住宅に住み続け、毎ターム家賃が発生するようになりました。';
+        } else {
+            gameData.isRenting = false;
+            logDetail = '一軒家を購入。今後の家賃負担はなくなりましたが、大きな資産変動が発生しました。';
+        }
+
+    } else if (choice.type === 'educationInvest' || choice.type === 'careerSeminar') {
+        // 教育投資 or 独身者のキャリア投資
+        if (Math.random() < 0.25) { // 25%の確率で成功
+            moneyChange += 600; 
+            happinessChange += 50;
+            logDetail = `投資が大成功！子供は名門校に入学（あるいはスキルが評価され）将来の収入が大きく改善しました。お金 **+600万円**、幸福度 **+50**。`;
+        } else {
+            moneyChange += 100; // 費用の一部は回収
+            happinessChange -= 30;
+            logDetail = `投資は期待外れ。多額の出費をしましたが、大きなリターンは得られませんでした。お金 **+100万円**、幸福度 **-30**。`;
+        }
+        document.getElementById('random-career-event').innerHTML = `
+            <h3>🎓 教育/自己投資の結果</h3>
+            <p>${logDetail}</p>
+        `;
+        document.getElementById('random-career-event').style.display = 'block';
+    
+    } else if (choice.type === 'accident') {
+        // 事故で保険に入っていない場合
+        if (gameData.hasInsurance && key === 'B') {
+            logDetail = '保険を適用。費用の大半は保険でカバーされました。';
+            // Bは保険加入者用なのでそのまま適用
+        } else if (!gameData.hasInsurance && key === 'C') {
+             // Cは非保険者用なのでそのまま適用
+             logDetail = '弁護士に交渉を依頼。大きな出費をしましたが、自己負担は減りました。';
+        } else if (key === 'A') {
+            // Aは全損害受け入れ
+            logDetail = '保険等を使わず、事故の損害を全て自分で負うことになりました。';
+        }
+
+    } else if (choice.type === 'retire') {
+        gameData.isRetired = true;
+        gameData.jobType = 'Retired';
+        logDetail = '早期退職し、第二の人生がスタート。今後は年金収入となります。';
+    
+    } else if (choice.type === 'invest') {
+        const investmentAmount = Math.floor(gameData.money / 2);
+        let returnRate = (Math.random() - 0.5) * 2; // -100%から+100%
+        if (returnRate > 0) { // 勝った場合、利益を減らす（投資は甘くない）
+            returnRate *= 0.5; // 最大+50%
+        } else { // 負けた場合、損失を増やす（リスク増）
+            returnRate *= 1.5; // 最大-150%
+        }
+        
+        // 投資額がマイナスの場合は0に
+        if (investmentAmount <= 0) {
+            logDetail = '投資する資金がなかったため、見送りました。';
+            moneyChange = 0;
+            happinessChange = -5; // 投資できなかったことへの小さな後悔
+            document.getElementById('random-career-event').innerHTML = `
+                <h3>📈 投資の結果</h3>
+                <p>資金不足のため投資を見送りました。</p>
+            `;
+            document.getElementById('random-career-event').style.display = 'block';
+        } else {
+            const investmentReturn = Math.round(investmentAmount * returnRate);
+            moneyChange = investmentReturn;
+            
+            if (investmentReturn > 0) {
+                logDetail = `大胆な投資が成功！**${investmentReturn.toLocaleString()} 万円** の利益を得ました。`;
+                happinessChange += 50;
+            } else {
+                logDetail = `投資が大失敗。**${Math.abs(investmentReturn).toLocaleString()} 万円** の損失を被りました。`;
+                happinessChange -= 70;
+            }
+            
+            document.getElementById('random-career-event').innerHTML = `
+                <h3>📈 投資の結果</h3>
+                <p>${logDetail}</p>
+            `;
+            document.getElementById('random-career-event').style.display = 'block';
+        }
+
+    }
+
+    // ----------------------------------------------------
+    // ステータスの適用
+    // ----------------------------------------------------
+    gameData.money += moneyChange;
+    gameData.happiness += happinessChange;
+
+    // ----------------------------------------------------
+    // 結果パネルとログの表示
+    // ----------------------------------------------------
+    
+    const moneyDisplay = moneyChange !== 0 ? 
+        `<span style="color:${moneyChange > 0 ? '#1e8e3e' : '#d93025'};">${moneyChange > 0 ? '+' : ''}${moneyChange.toLocaleString()} 万円</span>` : '±0 万円';
+    const happinessDisplay = happinessChange !== 0 ? 
+        `<span style="color:${happinessChange > 0 ? '#f9ab00' : '#d93025'};">${happinessChange > 0 ? '+' : ''}${happinessChange} pt</span>` : '±0 pt';
+
+    document.getElementById('result-text').innerHTML = 
+        `${resultText}
+        <div class="log-detail">
+            **お金の変動:** ${moneyDisplay} <br>
+            **幸福度の変動:** ${happinessDisplay} <br>
+            ${logDetail ? `**詳細:** ${logDetail}` : ''}
+        </div>`;
+    
+    document.getElementById('result-panel').style.display = 'block';
+    document.getElementById('choices-container').style.display = 'none';
+    document.getElementById('next-button').style.display = 'block';
+    
+    updateStatus();
+
+    // ログに記録
+    const choiceLog = {
+        term: gameData.term,
+        age: gameData.age,
+        choice: key,
+        logText: choice.logText,
+        money: moneyChange,
+        happiness: happinessChange
+    };
+    gameData.log.push(choiceLog);
+    updateLog();
+}
+
+// ----------------------------------------------------
+// 6. ログとゲーム進行 (nextTerm)
+// ----------------------------------------------------
+
+function updateLog() {
+    const logList = document.getElementById('log-list');
+    logList.innerHTML = '';
+    
+    // 直近のログを逆順に5つ表示
+    const recentLogs = gameData.log.slice(-10).reverse();
+    
+    recentLogs.forEach(entry => {
+        const listItem = document.createElement('li');
+        let moneyDisplay = entry.money !== 0 ? 
+            `<span style="color:${entry.money > 0 ? '#1e8e3e' : '#d93025'};">${entry.money > 0 ? '+' : ''}${entry.money.toLocaleString()}万円</span>` : '±0';
+        let happinessDisplay = entry.happiness !== 0 ? 
+            `<span style="color:${entry.happiness > 0 ? '#f9ab00' : '#d93025'};">${entry.happiness > 0 ? '+' : ''}${entry.happiness}pt</span>` : '±0';
+
+        listItem.innerHTML = `
+            **T${entry.term} (${entry.age}歳)**: ${entry.logText} 
+            [お金: ${moneyDisplay}, 幸福度: ${happinessDisplay}]
+        `;
+        logList.appendChild(listItem);
+    });
+}
+
+function nextTerm() {
+    gameData.term++;
+    if (gameData.term > terms.length) {
+        endGame();
+    } else {
+        loadTerm();
+    }
+    
+    // ★★★ ここにスクロール処理を追加 ★★★
+    // ページの一番上（top: 0）にスムーズにスクロール
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+// ----------------------------------------------------
+// 7. 終了処理 (endGame)
+// ----------------------------------------------------
+
+function endGame() {
+    document.getElementById('game-container').style.display = 'none';
+    const endGameScreen = document.getElementById('end-game-screen');
+    endGameScreen.style.display = 'block';
+
+    const finalMoney = gameData.money;
+    const finalHappiness = gameData.happiness;
+    
+    // スコア計算: (お金 / 100) + 幸福度
+    const finalScore = Math.round((finalMoney / 100) + finalHappiness);
+    
+    document.getElementById('final-money').textContent = finalMoney.toLocaleString();
+    document.getElementById('final-happiness').textContent = finalHappiness.toLocaleString();
+    document.getElementById('final-score').textContent = finalScore.toLocaleString();
+    
+    let ratingText = '';
+    
+    if (finalScore >= 1000) {
+        ratingText = "✨ 伝説級の人生：最高の成功と幸福！";
+    } else if (finalScore >= 500) {
+        ratingText = "🏆 勝ち組の人生：資産も幸福も手に入れた！";
+    } else if (finalScore >= 200) {
+        ratingText = "✅ 満足の人生：平均以上に充実した日々！";
+    } else if (finalScore >= 0) {
+        ratingText = "⚖️ 平凡な人生：特に突出した点はないが、安定した人生。";
+    } else if (finalScore >= -500) {
+        ratingText = "⚠️ ギリギリの人生：負債と後悔が残る。";
+    } else {
+        ratingText = "🚨 破滅的な人生：全てを失った…。";
+    }
+    
+    document.getElementById('rating').textContent = ratingText;
+}
+
+
+// ----------------------------------------------------
+// 8. 初期化
+// ----------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('next-button').addEventListener('click', nextTerm);
+    loadTerm();
+    updateLog();
+});
+</script>
+</body>
+</html>
